@@ -1,9 +1,10 @@
-S A B C
-a b
-S > aA
-A > bS
+A B C D
+a b c
+A > aA
 A > aB
-B > bC
-C > aA
+A > bC
 B > aB
-C > b0
+B > bD
+B > cC
+C > bD
+D > 00

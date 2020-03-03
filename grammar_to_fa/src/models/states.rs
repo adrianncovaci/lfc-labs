@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct State {
     pub name: String,
     pub directions: HashMap<String, char>,
@@ -24,10 +24,11 @@ impl State {
 
 impl fmt::Display for State {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{:?}\nstart state: {}\nend state: {}", self.name, self.directions, self.start_state, self.end_state)
+        write!(f, "{}", self.name)
     }
 }
 
+#[derive(Clone)]
 pub struct StateList {
     pub list: Vec<State>,
     capacity: usize,
@@ -105,7 +106,7 @@ impl StateList {
                 }
             }
             if dir != '`' && val != '`' {
-                self.list[curr.unwrap()].directions.insert(val.to_string(), dir);
+                self.list[curr.unwrap()].directions.insert(dir.to_string(), val);
             }
         }
     }

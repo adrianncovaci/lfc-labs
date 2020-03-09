@@ -1,8 +1,9 @@
 use crate::models::states::{State, StateList};
 use std::fmt;
 use std::collections::HashMap;
+use std::sync::Arc;
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct DFAState<'a> {
     pub name: Vec<&'a State>,
     pub link: HashMap<String, char>,
@@ -18,7 +19,7 @@ impl<'a> DFAState<'a> {
         }
     }
 
-    pub fn new_dfa_state(states: &'a Vec<&State>) -> DFAState<'a> {
+    pub fn new_dfa_state(states: Vec<&'a State>) -> DFAState<'a> {
         let val = DFAState::contains_end_state(&states);
 
         DFAState {
@@ -89,8 +90,9 @@ impl<'a> DFAList<'a> {
     }
 
     pub fn check_connections(&mut self, state_list: &'a StateList) {
-        for mut stmnt in self.states {
-        let mut vec: Vec<&'a State> = Vec::new();
+        let mut dfa_states_vec = vec![];
+        for stmnt in self.states.iter() {
+            let mut vec: Vec<&'a State> = Vec::new();
             for i in &state_list.values {
                 let mut string = String::new();
                 let ch = i;
@@ -107,11 +109,13 @@ impl<'a> DFAList<'a> {
                     }
                 }
                 if string != "".to_string() {
-                    stmnt.link.insert(string, *ch);
+                    //stmnt.link.insert(string, *ch);
+                    let mut arc = Arc::new(stmnt);
+                    Arc::make_mut(&mut arc).link.insert(string, *ch);
                 }
             }
         println!("q{} {:?} {}", stmnt, stmnt.link, vec.len());
-            self.states.push(DFAState::new_dfa_state(&vec));
+        dfa_states_vec.push(DFAState::new_dfa_state(vec));
         }
     }
 }

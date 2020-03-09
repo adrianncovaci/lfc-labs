@@ -16,8 +16,8 @@ fn main() {
     let beg_state = state_list.get_starting_state().unwrap();
     let mut x: Vec<&states::State> = vec![beg_state];
     let y: Vec<&states::State> = vec![beg_state, &state_list.list[2]];
-    let mut dfa_1 = dfa::DFAState::new_dfa_state(&x);
-    let mut dfa_2 = dfa::DFAState::new_dfa_state(&y);
+    let mut dfa_1 = dfa::DFAState::new_dfa_state(x);
+    let mut dfa_2 = dfa::DFAState::new_dfa_state(y);
 
 
     let mut dfalist = dfa::DFAList::new();

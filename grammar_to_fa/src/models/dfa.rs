@@ -2,6 +2,10 @@ use crate::models::states::{State, StateList};
 use std::fmt;
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
+
+
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct DFAState<'a> {
@@ -39,14 +43,69 @@ impl<'a> DFAState<'a> {
 
         false
     }
+
+    fn append_states(&mut self,states: &Vec<&'a State>) {
+        for x in states {
+            if !self.name.contains(&x) {
+                self.name.push(&x);
+            }
+        }
+    }
+
+    pub fn setup_link(&mut self, chrs: &Vec<char>, state_list: &'a StateList) -> Vec<DFAState<'a>> {
+        let mut dfa_vec = vec![];
+        let mut vec_names = vec![];
+        let mut string = String::new();
+        for ch in chrs {
+
+        let mut string = String::new();
+        let mut vec = vec![];
+        for state in self.name.iter() {
+            let mut name_string = String::new();
+            for (key, val) in &state.directions {
+                if *val == *ch {
+                    if !string.contains(&key.as_str()) {
+                        string.push_str(&key);
+                    }
+                    let str_val: Vec<char> = key.chars().collect();
+                    let node: &State = &state_list.list[state_list.get_state_by_name(str_val[0]).unwrap()];
+                    let drow: String = string.chars().rev().collect::<String>();
+               
+
+                    if !vec.contains(&node) && !vec_names.contains(&string) && !vec_names.contains(&drow) {
+                        vec.push(&node);
+                        vec_names.push(string.clone());
+                    }
+
+                }
+            }
+
+        }
+            if string != "".to_string() {
+                    self.link.insert(string, *ch);
+            }
+            if vec.len() > 0 {
+        let x = DFAState {
+            end_state: DFAState::contains_end_state(&vec),
+            name: vec.to_vec(),
+            link: HashMap::new(),
+        };
+        if !dfa_vec.contains(&x) {
+            dfa_vec.push(x);
+        }
+            }
+        }
+        dfa_vec
+    }
 }
+
 
 impl<'a> fmt::Display for DFAState<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for st in self.name.iter() {
             write!(f, "{}", st)?;
         }
-        write!(f, " ")
+        write!(f, "=> {:?} ", self.link)
     }
 }
 
@@ -89,34 +148,48 @@ impl<'a> DFAList<'a> {
         self.terminals = v.clone();
     }
 
-    pub fn check_connections(&mut self, state_list: &'a StateList) {
-        let mut dfa_states_vec = vec![];
-        for stmnt in self.states.iter() {
-            let mut vec: Vec<&'a State> = Vec::new();
-            for i in &state_list.values {
-                let mut string = String::new();
-                let ch = i;
-                for st in stmnt.name.iter() {
-                    for (key, val) in &st.directions {
-                        if *val == *ch {
-                            string.push_str(&key);
-                            let str_val: Vec<char> = key.chars().collect();
-                            let node: &State = &state_list.list[state_list.get_state_by_name(str_val[0]).unwrap()];
-                            if !vec.contains(&node) {
-                                vec.push(&node);
-                            }
-                        }
-                    }
+    pub fn check_if_contains(&self, list: &DFAState<'a>) -> bool {
+        for x in &list.name {
+            for y in &self.states {
+                for z in &y.name {
+                if *x != *z {
+                    return false;
                 }
-                if string != "".to_string() {
-                    //stmnt.link.insert(string, *ch);
-                    let mut arc = Arc::new(stmnt);
-                    Arc::make_mut(&mut arc).link.insert(string, *ch);
                 }
             }
-        println!("q{} {:?} {}", stmnt, stmnt.link, vec.len());
-        dfa_states_vec.push(DFAState::new_dfa_state(vec));
         }
+        return true;
+    }
+
+    pub fn check_connections(&mut self, state_list: &'a StateList) {
+        let mut dfa_vec = vec![];
+            for stmnt in &mut self.states {
+                if stmnt.link.is_empty() {
+                    let new_dfa_state = stmnt.setup_link(&self.terminals, state_list);
+                    for x in &new_dfa_state {
+                    }
+                        dfa_vec.push(new_dfa_state);
+                }
+            }
+
+        let mut checker: bool = true;
+
+        for statements in dfa_vec {
+            for x in statements {
+                if !self.check_if_contains(&x) {
+                    self.append_dfa_state(x);
+                    checker = false;
+                }
+        }
+
+        for x in &self.states {
+        }
+
+        if checker {
+            self.check_connections(state_list);
+        }
+        }
+
     }
 }
 
